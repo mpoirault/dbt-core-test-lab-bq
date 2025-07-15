@@ -37,7 +37,7 @@ latest_events as (
 renamed as (
     select
         --surrogate key
-        {{ dbt_utils.generate_surrogate_key(['venue_id', 'time', 'group_id', 'name', 'description']) }} as event_id,
+        concat('venue_id', 'time', 'group_id', 'name', 'description') as event_id,
 
         -- ids
         cast(venue_id as string) as venue_id,

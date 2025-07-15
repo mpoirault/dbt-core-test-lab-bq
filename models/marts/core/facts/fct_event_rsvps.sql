@@ -47,7 +47,7 @@ unnested_rsvps as (
 enriched_rsvps as (
     select
         -- Surrogate Keys
-        {{ dbt_utils.generate_surrogate_key(['ur.event_id', 'ur.user_id', 'ur.rsvp_time_ts']) }} as rsvp_key,
+        concat(ur.event_id, '-', ur.user_id, '-', ur.rsvp_time_ts) as rsvp_key,
         
         -- Dimension References (Surrogate Keys)
         -- All references are guaranteed to exist based on data constraints
