@@ -1,0 +1,305 @@
+version: 2
+
+models:
+  - name: analytics_events
+    description: >
+      Analytics-ready table containing enriched event and RSVP data.
+      This model combines information from events, RSVPs, users, groups, and venues
+      to provide a comprehensive view for analysis.
+    config:
+      tags: ['analytics', 'meetup', 'events']
+      persist_docs:
+        relation: true
+        columns: true
+    columns:
+      - name: rsvp_key
+        description: Unique identifier for the RSVP record
+        tests:
+          - unique
+          - not_null
+          
+      - name: event_key
+        description: Reference to the event
+        tests:
+          - not_null
+          
+      - name: user_key
+        description: Reference to the user
+        tests:
+          - not_null
+          
+      - name: group_key
+        description: Reference to the group
+        tests:
+          - not_null
+          
+      - name: venue_key
+        description: Reference to the venue
+        tests:
+          - not_null
+          
+      - name: event_name
+        description: Name of the event
+
+      - name: event_series_number
+        description: >
+          Sequential number of the event within its series (events with the same name).
+          Numbered based on chronological order (event_time_ts).
+          NULL for events with unique names.
+        
+      - name: event_original_status
+        description: Original status of the event from the source
+        
+      - name: event_current_status
+        description: Current status of the event based on timing
+        
+      - name: event_description_length
+        description: Length of the event description in characters
+        
+      - name: event_has_description
+        description: Flag indicating if the event has a description
+        
+      - name: event_duration_minutes
+        description: Duration of the event in minutes
+        
+      - name: event_duration_hours
+        description: Duration of the event in hours
+        
+      - name: event_rsvp_limit
+        description: Maximum number of attendees allowed
+        
+      - name: rsvp_response
+        description: User's RSVP response (yes/no)
+        
+      - name: rsvp_guest_count
+        description: Number of additional guests included in the RSVP
+        
+      - name: rsvp_is_attending
+        description: Flag indicating if the user is attending
+        
+      - name: rsvp_has_guests
+        description: Flag indicating if the RSVP includes guests
+        
+      - name: rsvp_hours_before_event
+        description: Hours between RSVP and event time
+        
+      - name: rsvp_days_before_event
+        description: Days between RSVP and event time
+        
+      - name: user_country_code
+        description: Country code of the user's location
+        
+      - name: user_city_name
+        description: City name of the user's location
+        
+      - name: user_hometown_name
+        description: User's hometown name
+        
+      - name: user_memberships
+        description: Array of group memberships for this user
+        
+      - name: group_name
+        description: Name of the group
+        
+      - name: group_description_length
+        description: Length of the group description in characters
+        
+      - name: group_has_description
+        description: Flag indicating if the group has a description
+        
+      - name: group_has_valid_url
+        description: Flag indicating if the group has a valid URL
+        
+      - name: group_latitude
+        description: Latitude coordinate of the group's location
+        
+      - name: group_longitude
+        description: Longitude coordinate of the group's location
+        
+      - name: group_topics
+        description: Array of topics associated with this group
+        
+      - name: venue_name
+        description: Name of the venue
+        
+      - name: venue_city_name
+        description: City where the venue is located
+        
+      - name: venue_country_code
+        description: Country code where the venue is located
+        
+      - name: venue_latitude
+        description: Latitude coordinate of the venue's location
+        
+      - name: venue_longitude
+        description: Longitude coordinate of the venue's location
+        
+      - name: event_time_ts
+        description: Timestamp when the event is scheduled to occur
+        
+      - name: event_date
+        description: Date when the event is scheduled to occur
+        
+      - name: event_year
+        description: Year of the event
+        
+      - name: event_month
+        description: Month of the event
+        
+      - name: event_day
+        description: Day of the event
+        
+      - name: event_day_of_week
+        description: Day of week of the event (1-7)
+        
+      - name: event_day_name
+        description: Name of the day of the event
+        
+      - name: event_month_name
+        description: Name of the month of the event
+        
+      - name: rsvp_time_ts
+        description: Timestamp when the RSVP was made
+        
+      - name: rsvp_date
+        description: Date when the RSVP was made
+        
+      - name: rsvp_year
+        description: Year when the RSVP was made
+        
+      - name: rsvp_month
+        description: Month when the RSVP was made
+        
+      - name: dbt_updated_at
+        description: Timestamp when this record was last updated
+
+  - name: analytics_event_summary
+    description: "A denormalized view combining event summary metrics with dimensional context. This model provides a comprehensive view of event performance including RSVP metrics, response rates, and all relevant contextual information from events, groups, and venues."
+    config:
+      tags: ['analytics', 'meetup', 'events']
+      persist_docs:
+        relation: true
+        columns: true
+    columns:
+      - name: event_key
+        description: "The unique identifier for the event"
+        tests:
+          - not_null
+          - unique
+
+      # Event Information
+      - name: event_name
+        description: "The name of the event"
+
+      - name: event_series_number
+        description: "The sequence number of the event within its series"
+
+      - name: event_description
+        description: "The full description of the event"
+
+      - name: event_original_status
+        description: "The original status of the event when created"
+
+      - name: event_current_status
+        description: "The current status of the event"
+
+      - name: event_duration_minutes
+        description: "The planned duration of the event in minutes"
+
+      - name: event_rsvp_limit
+        description: "The maximum number of RSVPs allowed for the event"
+
+      # Group Information
+      - name: group_name
+        description: "The name of the group hosting the event"
+
+      - name: group_topics
+        description: "The topics/interests associated with the hosting group"
+
+      # Venue Information
+      - name: venue_name
+        description: "The name of the event venue"
+
+      - name: venue_city_name
+        description: "The city where the venue is located"
+
+      - name: venue_country_code
+        description: "The country code of the venue location"
+
+      # Response Counts
+      - name: total_possible_responses
+        description: "The total number of group members who could potentially respond to the event"
+
+      - name: total_rsvp_responses
+        description: "The total number of members who provided any RSVP response (yes, no, or waitlist)"
+
+      - name: yes_responses
+        description: "The number of members who responded 'yes' to the event"
+
+      - name: explicit_no_responses
+        description: "The number of members who explicitly responded 'no' to the event"
+
+      - name: waitlist_responses
+        description: "The number of members who are on the waitlist for the event"
+
+      - name: total_no_responses
+        description: "The total number of non-positive responses (total_possible_responses minus yes_responses and waitlist_responses)"
+
+      - name: total_guests
+        description: "The total number of additional guests indicated in RSVPs"
+
+      - name: avg_days_before_event
+        description: "The average number of days before the event that members RSVP"
+
+      # Original Response Rates
+      - name: rsvp_rate
+        description: "Rate of possible attendees who provided any RSVP response (total_rsvp_responses / total_possible_responses)"
+
+      - name: yes_rate_of_responses
+        description: "Rate of actual responses that were 'yes' (yes_responses / total_rsvp_responses)"
+
+      - name: no_rate_of_responses
+        description: "Rate of actual responses that were explicit 'no' (explicit_no_responses / total_rsvp_responses)"
+
+      # New Response Rates
+      - name: yes_rate
+        description: "Rate of possible attendees who responded 'yes' (yes_responses / total_possible_responses)"
+
+      - name: waitlist_rate
+        description: "Rate of possible attendees on waitlist (waitlist_responses / total_possible_responses)"
+
+      - name: total_no_rate
+        description: "Rate of possible attendees who did not respond positively (total_no_responses / total_possible_responses)"
+
+      - name: explicit_no_rate
+        description: "Rate of possible attendees who explicitly said no (explicit_no_responses / total_possible_responses)"
+
+      - name: no_response_rate
+        description: "Rate of possible attendees who did not provide any response ((total_possible_responses - total_rsvp_responses) / total_possible_responses)"
+
+      # Date and Time Fields
+      - name: event_time_ts
+        description: "The timestamp when the event is scheduled to occur"
+
+      - name: event_date
+        description: "The date of the event"
+
+      - name: event_year
+        description: "The year of the event"
+
+      - name: event_month
+        description: "The month number of the event (1-12)"
+
+      - name: event_day
+        description: "The day of the month of the event"
+
+      - name: event_day_of_week
+        description: "The day of the week as a number (1-7)"
+
+      - name: event_day_name
+        description: "The name of the day of the week"
+
+      - name: event_month_name
+        description: "The abbreviated name of the month"
+
+ 
