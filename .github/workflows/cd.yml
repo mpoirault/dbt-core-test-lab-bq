@@ -3,8 +3,8 @@ name: dbt CD
 on:
   push:
     branches: [ main ]
-#   schedule:
-#     - cron: '0 8 * * *'
+# #   schedule:
+# #     - cron: '0 8 * * *'
 
 jobs:
   cd:
@@ -38,7 +38,7 @@ jobs:
       - name: Create profiles.yml
         run: |
           cat > profiles.yml << EOF
-          xebia_case:
+          ae_certificate:
             target: prod
             outputs:
               prod:
@@ -55,21 +55,21 @@ jobs:
       - name: DBT Debug
         run: dbt debug
         
-      - name: Deploy to production
-        run: dbt build --target prod
+#       - name: Deploy to production
+#         run: dbt build --target prod
 
-    #     - name: Generate dbt docs
-    #     run: dbt docs generate --target prod
+#     #     - name: Generate dbt docs
+#     #     run: dbt docs generate --target prod
 
-    #   - name: Setup GitHub Pages
-    #     uses: actions/configure-pages@v2
+#     #   - name: Setup GitHub Pages
+#     #     uses: actions/configure-pages@v2
 
-    #   - name: Upload dbt docs to GitHub Pages
-    #     uses: actions/upload-pages-artifact@v1
-    #     with:
-    #       path: ./target
+#     #   - name: Upload dbt docs to GitHub Pages
+#     #     uses: actions/upload-pages-artifact@v1
+#     #     with:
+#     #       path: ./target
 
-    #   - name: Deploy to GitHub Pages
-    #     id: deployment
-    #     uses: actions/deploy-pages@v1
-    #   Could add, but premium for github pages is needed or making it public. Not sure if there are other options?
+#     #   - name: Deploy to GitHub Pages
+#     #     id: deployment
+#     #     uses: actions/deploy-pages@v1
+#     #   Could add, but premium for github pages is needed or making it public. Not sure if there are other options?

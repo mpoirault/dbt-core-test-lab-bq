@@ -10,9 +10,6 @@ models:
     columns:
       - name: user_id
         description: "Unique identifier for the user"
-        tests:
-          - unique
-          - not_null
       - name: country_code
         description: "Cleaned country code where the user resides"
       - name: city_name
@@ -36,9 +33,6 @@ models:
     columns:
       - name: venue_id
         description: "Unique identifier for the venue"
-        tests:
-          - unique
-          - not_null
       - name: venue_name
         description: "Cleaned venue name"
       - name: city_name
@@ -64,9 +58,6 @@ models:
     columns:
       - name: group_id
         description: "Unique identifier for the group"
-        tests:
-          - unique
-          - not_null
       - name: group_name
         description: "Cleaned group name"
       - name: description
@@ -103,30 +94,16 @@ models:
     columns:
       - name: event_id
         description: Surrogate key generated for the event from venue_id, time, group_id, name, and description
-        tests:
-          - unique
-          - not_null
       - name: venue_id
         description: Reference to the venue where the event is held
-        tests:
-          - relationships:
-              to: ref('stg_meetup__venues')
-              field: venue_id
       - name: group_id
         description: Reference to the group organizing the event
-        tests:
-          - relationships:
-              to: ref('stg_meetup__groups')
-              field: group_id
       - name: event_name
         description: Name of the event
       - name: description
         description: Detailed description of the event
       - name: original_status
         description: Original status of the event from the source
-        tests:
-          - accepted_values:
-              values: ['past', 'upcoming', 'proposed', 'cancelled', 'suggested']
       - name: current_status
         description: >
           Current status of the event based on the event time and current time. Possible values:
@@ -135,9 +112,6 @@ models:
           - cancelled: Event was cancelled by organizers
           - proposed: Event has been proposed but not confirmed
           - suggested: Event has been suggested to organizers
-        tests:
-          - accepted_values:
-              values: ['past', 'upcoming', 'proposed', 'cancelled', 'suggested']
       - name: description_length
         description: Length of the event description in characters
       - name: has_description

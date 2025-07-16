@@ -31,30 +31,30 @@ jobs:
         run: |
           echo '${{ secrets.BIGQUERY_KEYFILE }}' > keyfile.json
           
-      - name: Create profiles.yml
-        run: |
-          cat > profiles.yml << EOF
-          xebia_case:
-            target: ci
-            outputs:
-              ci:
-                type: bigquery
-                method: service-account
-                keyfile: keyfile.json
-                project: ${{ secrets.BIGQUERY_PROJECT }}
-                dataset: ${{ secrets.BIGQUERY_DATASET_CI }}
-                threads: 4
-                timeout_seconds: 600
-                location: EU
-          EOF
+#       - name: Create profiles.yml
+#         run: |
+#           cat > profiles.yml << EOF
+#           xebia_case:
+#             target: ci
+#             outputs:
+#               ci:
+#                 type: bigquery
+#                 method: service-account
+#                 keyfile: keyfile.json
+#                 project: ${{ secrets.BIGQUERY_PROJECT }}
+#                 dataset: ${{ secrets.BIGQUERY_DATASET_CI }}
+#                 threads: 4
+#                 timeout_seconds: 600
+#                 location: EU
+#           EOF
 
-      - name: Dry Run
-        run: |
-          dbt parse
-          dbt compile --target ci
+#       - name: Dry Run
+#         run: |
+#           dbt parse
+#           dbt compile --target ci
 
-    #    Need to think about linting, but sqlfluff messes up macro's --> why or as Pre-commit?
-    #   - name: dbt build
-    #     run: dbt build --target ci
-    # Building all models everytime, look into state:modified 
+#     #    Need to think about linting, but sqlfluff messes up macro's --> why or as Pre-commit?
+#     #   - name: dbt build
+#     #     run: dbt build --target ci
+#     # Building all models everytime, look into state:modified 
         

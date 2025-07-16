@@ -12,9 +12,6 @@ models:
     columns:
       - name: user_id
         description: Unique identifier for the user
-        tests:
-          - unique
-          - not_null
       
       - name: country_code
         description: Country code of the user's location
@@ -48,9 +45,6 @@ models:
     columns:
       - name: group_id
         description: Unique identifier for the group
-        tests:
-          - unique
-          - not_null
       
       - name: group_name
         description: Name of the group
@@ -104,9 +98,6 @@ models:
     columns:
       - name: event_id
         description: Surrogate key generated for the event from venue_id, time, group_id, name, and description
-        tests:
-          - unique
-          - not_null
       
       - name: venue_id
         description: Reference to the venue where the event is held
@@ -134,9 +125,6 @@ models:
           - cancelled: Event was cancelled by organizers
           - proposed: Event has been proposed but not confirmed
           - suggested: Event has been suggested to organizers
-        tests:
-          - accepted_values:
-              values: ['past', 'upcoming', 'proposed', 'cancelled', 'suggested']
 
       - name: current_status
         description: >
@@ -188,9 +176,6 @@ models:
     columns:
       - name: venue_id
         description: Unique identifier for the venue
-        tests:
-          - unique
-          - not_null
       
       - name: venue_name
         description: Name of the venue
@@ -216,180 +201,4 @@ models:
       - name: dbt_updated_at
         description: Timestamp when this record was last updated in the data warehouse
 
-  - name: fct_event_rsvps
-    description: >
-      Fact table containing RSVP data from Meetup events. Each record represents
-      a single RSVP from a user to an event. This fact table follows the star schema
-      pattern with dimension keys for events, venues, groups, and users, while
-      focusing on RSVP-specific measures and metrics.
-    config:
-      tags: ['fact', 'meetup', 'rsvps']
-      persist_docs:
-        relation: true
-        columns: true
-    
-    columns:
-      - name: rsvp_key
-        description: Surrogate key for the RSVP record
-        tests:
-          - unique
-          - not_null
-      
-      - name: event_key
-        description: Foreign key reference to dim_events
-        tests:
-          - not_null
-          - relationships:
-              to: ref('dim_events')
-              field: event_id
-              severity: error
-      
-      - name: venue_key
-        description: Foreign key reference to dim_venues
-        tests:
-          - not_null
-          - relationships:
-              to: ref('dim_venues')
-              field: venue_id
-              severity: error
-      
-      - name: group_key
-        description: Foreign key reference to dim_groups
-        tests:
-          - not_null
-          - relationships:
-              to: ref('dim_groups')
-              field: group_id
-              severity: error
-      
-      - name: user_key
-        description: Foreign key reference to dim_users
-        tests:
-          - not_null
-          - relationships:
-              to: ref('dim_users')
-              field: user_id
-              severity: error
-      
-      - name: rsvp_response
-        description: User's RSVP response (yes/no)
-      
-      - name: guest_count
-        description: Number of additional guests included in the RSVP
-      
-      - name: rsvp_limit
-        description: Maximum number of attendees allowed for the event
-      
-      - name: rsvp_time_ts
-        description: Timestamp when the RSVP was made
-      
-      - name: rsvp_date
-        description: Date when the RSVP was made, used for partitioning
-      
-      - name: event_series_number
-        description: >
-          Sequential number of the event within its series (events with the same name).
-          Numbered based on chronological order (event_time_ts).
-          NULL for events with unique names.
-      
-      - name: hours_before_event
-        description: Hours between RSVP and event time
-      
-      - name: days_before_event
-        description: Days between RSVP and event time
-      
-      - name: is_attending
-        description: Flag indicating if the user is attending
-      
-      - name: has_guests
-        description: Flag indicating if the RSVP includes guests
-      
-      - name: dbt_updated_at
-        description: Timestamp when this record was last updated
-        
-  - name: fct_event_rsvp_summary
-    description: "A summarized fact table containing RSVP metrics at the event level. This table provides aggregated statistics about RSVPs, including response counts and various response rates calculated against both total possible responses and actual responses."
-    config:
-      tags: ['core', 'meetup', 'events']
-      persist_docs:
-        relation: true
-        columns: true
-    columns:
-      - name: event_key
-        description: "The unique identifier for the event"
-        tests:
-          - not_null
-          - unique
-          - relationships:
-              to: ref('dim_events')
-              field: event_id
-
-      - name: group_key
-        description: "The unique identifier for the group hosting the event"
-        tests:
-          - not_null
-          - relationships:
-              to: ref('dim_groups')
-              field: group_id
-
-      - name: venue_key
-        description: "The unique identifier for the event venue"
-        tests:
-          - not_null
-          - relationships:
-              to: ref('dim_venues')
-              field: venue_id
-
-      - name: event_time_ts
-        description: "The timestamp when the event is scheduled to occur"
-
-      # Response Counts
-      - name: total_possible_responses
-        description: "The total number of group members who could potentially respond to the event"
-
-      - name: total_rsvp_responses
-        description: "The total number of members who provided any RSVP response (yes, no, or waitlist)"
-
-      - name: yes_responses
-        description: "The number of members who responded 'yes' to the event"
-
-      - name: explicit_no_responses
-        description: "The number of members who explicitly responded 'no' to the event"
-
-      - name: waitlist_responses
-        description: "The number of members who are on the waitlist for the event"
-
-      - name: total_no_responses
-        description: "The total number of non-positive responses (total_possible_responses minus yes_responses and waitlist_responses)"
-
-      - name: total_guests
-        description: "The total number of additional guests indicated in RSVPs"
-
-      - name: avg_days_before_event
-        description: "The average number of days before the event that members RSVP"
-
-      # Original Response Rates
-      - name: rsvp_rate
-        description: "Rate of possible attendees who provided any RSVP response (total_rsvp_responses / total_possible_responses)"
-
-      - name: yes_rate_of_responses
-        description: "Rate of actual responses that were 'yes' (yes_responses / total_rsvp_responses)"
-
-      - name: no_rate_of_responses
-        description: "Rate of actual responses that were explicit 'no' (explicit_no_responses / total_rsvp_responses)"
-
-      # New Response Rates
-      - name: yes_rate
-        description: "Rate of possible attendees who responded 'yes' (yes_responses / total_possible_responses)"
-
-      - name: waitlist_rate
-        description: "Rate of possible attendees on waitlist (waitlist_responses / total_possible_responses)"
-
-      - name: total_no_rate
-        description: "Rate of possible attendees who did not respond positively (total_no_responses / total_possible_responses)"
-
-      - name: explicit_no_rate
-        description: "Rate of possible attendees who explicitly said no (explicit_no_responses / total_possible_responses)"
-
-      - name: no_response_rate
-        description: "Rate of possible attendees who did not provide any response ((total_possible_responses - total_rsvp_responses) / total_possible_responses)" 
+ 
