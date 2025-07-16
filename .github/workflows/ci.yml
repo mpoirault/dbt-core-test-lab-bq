@@ -10,7 +10,7 @@ jobs:
 
     # expose only what dbt needs
     env:
-      BIGQUERY_KEYFILE_JSON: ${{ secrets.BIGQUERY_KEYFILE }}   # full SA key as JSON
+      BIGQUERY_KEYFILE: ${{ secrets.BIGQUERY_KEYFILE }}   # full SA key as JSON
       BIGQUERY_PROJECT:      ${{ secrets.BIGQUERY_KEYFILE }}
       BIGQUERY_DATASET_CI:   ${{ secrets.BIGQUERY_DATASET_CI }}
       DBT_PROFILES_DIR:      .            # directory that holds profiles.yml
