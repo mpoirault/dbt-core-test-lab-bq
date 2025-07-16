@@ -8,7 +8,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      BIGQUERY_KEYFILE:  ${{ secrets.BIGQUERY_KEYFILE }}
+      BIGQUERY_KEYFILE:       ${{ secrets.BIGQUERY_KEYFILE }}
       BIGQUERY_PROJECT:       ${{ secrets.BIGQUERY_PROJECT }}
       BIGQUERY_DATASET_PROD:  ${{ secrets.BIGQUERY_DATASET_PROD }}
       DBT_PROFILES_DIR:       .          # repo root holds profiles.yml
