@@ -1,75 +1,29 @@
-name: dbt CD
+name: dbt‑cd
 
 on:
   push:
     branches: [ main ]
-# #   schedule:
-# #     - cron: '0 8 * * *'
 
 jobs:
-  cd:
-    name: Deploy to Production
+  deploy:
     runs-on: ubuntu-latest
-    
     env:
-      DBT_PROFILES_DIR: ./
-      
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v3
+      BIGQUERY_KEYFILE_JSON:  ${{ secrets.BIGQUERY_KEYFILE }}
+      BIGQUERY_PROJECT:       ${{ secrets.BIGQUERY_PROJECT }}
+      BIGQUERY_DATASET_PROD:  ${{ secrets.BIGQUERY_DATASET_PROD }}
+      DBT_PROFILES_DIR:       .          # repo root holds profiles.yml
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-          
-      - name: Install dependencies 
+
+      - name: Install dbt
         run: |
           python -m pip install --upgrade pip
           pip install dbt-core dbt-bigquery
-          
-      - name: Install DBT packages
-        run: dbt deps
-        
-      - name: Setup BigQuery credentials
-        run: |
-          echo '${{ secrets.BIGQUERY_KEYFILE }}' > keyfile.json
-          
-      - name: Create profiles.yml
-        run: |
-          cat > profiles.yml << EOF
-          ae_certificate:
-            target: prod
-            outputs:
-              prod:
-                type: bigquery
-                method: service-account
-                keyfile: keyfile.json
-                project: ${{ secrets.BIGQUERY_PROJECT }}
-                dataset: ${{ secrets.BIGQUERY_DATASET_PROD }}
-                threads: 4
-                timeout_seconds: 600
-                location: EU
-          EOF
-          
-      - name: DBT Debug
-        run: dbt debug
-        
-#       - name: Deploy to production
-#         run: dbt build --target prod
 
-#     #     - name: Generate dbt docs
-#     #     run: dbt docs generate --target prod
-
-#     #   - name: Setup GitHub Pages
-#     #     uses: actions/configure-pages@v2
-
-#     #   - name: Upload dbt docs to GitHub Pages
-#     #     uses: actions/upload-pages-artifact@v1
-#     #     with:
-#     #       path: ./target
-
-#     #   - name: Deploy to GitHub Pages
-#     #     id: deployment
-#     #     uses: actions/deploy-pages@v1
-#     #   Could add, but premium for github pages is needed or making it public. Not sure if there are other options?
+      - name: Verify connection to BigQuery prod
+        run: dbt debug --target prod

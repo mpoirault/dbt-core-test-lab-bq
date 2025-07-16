@@ -5,56 +5,27 @@ on:
     branches: [ main ]
 
 jobs:
-  ci:
-    runs-on: ubuntu-latest  
-    env:
-      DBT_PROFILES_DIR: ./
-      
-    steps:
-      - name: Checkout branch
-        uses: actions/checkout@v3
+  debug:
+    runs-on: ubuntu-latest
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+    # expose only what dbt needs
+    env:
+      BIGQUERY_KEYFILE_JSON: ${{ secrets.BIGQUERY_KEYFILE }}   # full SA key as JSON
+      BIGQUERY_PROJECT:      ${{ secrets.BIGQUERY_PROJECT }}
+      BIGQUERY_DATASET_CI:   ${{ secrets.BIGQUERY_DATASET_CI }}
+      DBT_PROFILES_DIR:      .            # directory that holds profiles.yml
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-          
-      - name: Install dependencies 
+
+      - name: Install dbt
         run: |
           python -m pip install --upgrade pip
           pip install dbt-core dbt-bigquery
-          
-      - name: Install DBT packages
-        run: dbt deps
-        
-      - name: Setup BigQuery credentials
-        run: |
-          echo '${{ secrets.BIGQUERY_KEYFILE }}' > keyfile.json
-          
-#       - name: Create profiles.yml
-#         run: |
-#           cat > profiles.yml << EOF
-#           xebia_case:
-#             target: ci
-#             outputs:
-#               ci:
-#                 type: bigquery
-#                 method: service-account
-#                 keyfile: keyfile.json
-#                 project: ${{ secrets.BIGQUERY_PROJECT }}
-#                 dataset: ${{ secrets.BIGQUERY_DATASET_CI }}
-#                 threads: 4
-#                 timeout_seconds: 600
-#                 location: EU
-#           EOF
 
-#       - name: Dry Run
-#         run: |
-#           dbt parse
-#           dbt compile --target ci
-
-#     #    Need to think about linting, but sqlfluff messes up macro's --> why or as Pre-commit?
-#     #   - name: dbt build
-#     #     run: dbt build --target ci
-#     # Building all models everytime, look into state:modified 
-        
+      - name: Test BigQuery connection
+        run: dbt debug --target ci
