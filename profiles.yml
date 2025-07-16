@@ -3,9 +3,8 @@ ae_certificate:
   outputs:
     ci:
       type: bigquery
-      method: service-account-json
-      keyfile_json: |
-        {{ env_var('BIGQUERY_KEYFILE') | indent(2) }}
+      method: service-account
+      keyfile: '{{ env_var("KEYFILE_LOCATION") }}'      # ← single quotes outside
       project: '{{ env_var("BIGQUERY_PROJECT") }}'
       dataset: '{{ env_var("BIGQUERY_DATASET_CI") }}'
       location: EU
@@ -14,9 +13,8 @@ ae_certificate:
 
     prod:
       type: bigquery
-      method: service-account-json
-      keyfile_json: |
-        {{ env_var('BIGQUERY_KEYFILE') | indent(2) }}
+      method: service-account
+      keyfile: '{{ env_var("KEYFILE_LOCATION") }}'
       project: '{{ env_var("BIGQUERY_PROJECT") }}'
       dataset: '{{ env_var("BIGQUERY_DATASET_PROD") }}'
       location: EU

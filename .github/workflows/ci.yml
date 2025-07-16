@@ -7,15 +7,18 @@ on:
 jobs:
   debug:
     runs-on: ubuntu-latest
-
-    # expose only what dbt needs
     env:
-      BIGQUERY_KEYFILE: ${{ secrets.BIGQUERY_KEYFILE }}   # full SA key as JSON
-      BIGQUERY_PROJECT:      ${{ secrets.BIGQUERY_KEYFILE }}
-      BIGQUERY_DATASET_CI:   ${{ secrets.BIGQUERY_DATASET_CI }}
-      DBT_PROFILES_DIR:      .            # directory that holds profiles.yml
+      KEYFILE_LOCATION:       /tmp/google/google-service-account.json
+      BIGQUERY_KEYFILE:       ${{ secrets.BIGQUERY_KEYFILE }}
+      BIGQUERY_PROJECT:       ${{ secrets.BIGQUERY_PROJECT }}
+      BIGQUERY_DATASET_PROD:  ${{ secrets.BIGQUERY_DATASET_PROD }}
+      DBT_PROFILES_DIR:       .          # repo root holds profiles.yml
 
     steps:
+            # Prep Google keyfile
+      - run: mkdir -p "$(dirname $KEYFILE_LOCATION)" 
+      - run: echo "$BIGQUERY_KEYFILE" > $KEYFILE_LOCATION
+
       - uses: actions/checkout@v3
 
       - uses: actions/setup-python@v4
@@ -27,5 +30,5 @@ jobs:
           python -m pip install --upgrade pip
           pip install dbt-core dbt-bigquery
 
-      - name: Test BigQuery connection
-        run: dbt debug --target ci
+      - name: Verify connection to BigQuery prod
+        run: dbt debug --target prod

@@ -1,4 +1,4 @@
-name: dbt‑cd
+name: dbt-cd
 
 on:
   push:
@@ -7,23 +7,31 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     env:
-      BIGQUERY_KEYFILE:       ${{ secrets.BIGQUERY_KEYFILE }}
-      BIGQUERY_PROJECT:       ${{ secrets.BIGQUERY_PROJECT }}
-      BIGQUERY_DATASET_PROD:  ${{ secrets.BIGQUERY_DATASET_PROD }}
-      DBT_PROFILES_DIR:       .          # repo root holds profiles.yml
+      KEYFILE_LOCATION: /tmp/google/google-service-account.json
+      BIGQUERY_KEYFILE: ${{ secrets.BIGQUERY_KEYFILE }}      # full JSON
+      BIGQUERY_PROJECT: ${{ secrets.BIGQUERY_PROJECT }}
+      BIGQUERY_DATASET_PROD: ${{ secrets.BIGQUERY_DATASET_PROD }}
+      DBT_PROFILES_DIR: .     
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Prepare service‑account key
+        run: |
+          mkdir -p "$(dirname "$KEYFILE_LOCATION")"
+          printf '%s' "$BIGQUERY_KEYFILE" > "$KEYFILE_LOCATION"
+          chmod 600 "$KEYFILE_LOCATION"             # restrict access
 
       - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
-      - name: Install dbt
+      - name: Install dbt + adapter
         run: |
           python -m pip install --upgrade pip
           pip install dbt-core dbt-bigquery
 
-      - name: Verify connection to BigQuery prod
+      - name: Verify BigQuery connection (prod)
         run: dbt debug --target prod
