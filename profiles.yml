@@ -4,18 +4,19 @@ ae_certificate:
     ci:
       type: bigquery
       method: service-account-json
-      keyfile_json: "{{ env_var('BIGQUERY_KEYFILE') }}"
-      project: "{{ env_var('BIGQUERY_PROJECT') }}"
-      dataset: "{{ env_var('BIGQUERY_DATASET_CI') }}"
+      keyfile_json: '{{ env_var("BIGQUERY_KEYFILE") }}'      # ← single quotes outside
+      project: '{{ env_var("BIGQUERY_PROJECT") }}'
+      dataset: '{{ env_var("BIGQUERY_DATASET_CI") }}'
+      location: EU
       threads: 4
       timeout_seconds: 600
-      location: EU
+
     prod:
       type: bigquery
       method: service-account-json
-      keyfile_json: "{{ env_var('BIGQUERY_KEYFILE') }}"
-      project: "{{ env_var('BIGQUERY_PROJECT') }}"
-      dataset: "{{ env_var('BIGQUERY_DATASET_PROD') }}"
+      keyfile_json: '{{ env_var("BIGQUERY_KEYFILE") }}'
+      project: '{{ env_var("BIGQUERY_PROJECT") }}'
+      dataset: '{{ env_var("BIGQUERY_DATASET_PROD") }}'
+      location: EU
       threads: 4
       timeout_seconds: 600
-      location: EU
