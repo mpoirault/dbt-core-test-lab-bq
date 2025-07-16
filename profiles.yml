@@ -1,4 +1,4 @@
-ae_certification:
+ae_certificate:
   target: ci
   outputs:
     ci:
@@ -10,8 +10,6 @@ ae_certification:
       threads: 4
       timeout_seconds: 600
       location: EU
-
-  outputs:
     prod:
       type: bigquery
       method: service-account
