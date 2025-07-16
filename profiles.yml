@@ -3,7 +3,7 @@ ae_certificate:
   outputs:
     ci:
       type: bigquery
-      method: service-account
+      method: service-account-json
       keyfile_json: "{{ env_var('BIGQUERY_KEYFILE') }}"
       project: "{{ env_var('BIGQUERY_PROJECT') }}"
       dataset: "{{ env_var('BIGQUERY_DATASET_CI') }}"
@@ -12,7 +12,7 @@ ae_certificate:
       location: EU
     prod:
       type: bigquery
-      method: service-account
+      method: service-account-json
       keyfile_json: "{{ env_var('BIGQUERY_KEYFILE') }}"
       project: "{{ env_var('BIGQUERY_PROJECT') }}"
       dataset: "{{ env_var('BIGQUERY_DATASET_PROD') }}"
