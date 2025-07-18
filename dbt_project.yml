@@ -13,3 +13,10 @@ snapshot-paths:   ["snapshots"]
 clean-targets:
   - "target"
   - "dbt_packages"
+
+on-run-end:
+  - "{{ log_bq_jobs(region='EU') }}"
+    
+query-comment: 
+  job-label: true
+  comment: "{{ query_comment(node) }}"

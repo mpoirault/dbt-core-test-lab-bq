@@ -3,6 +3,7 @@ version: 2
 sources:
   - name: meetup
     schema: meetup_raw
+    loader: python
     meta:
       external_location: "GCS"
       partitioned_by: "_PARTITIONTIME"
