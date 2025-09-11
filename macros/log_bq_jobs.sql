@@ -1,6 +1,6 @@
 {% macro log_bq_jobs(region='EU', dataset='dbt_audit', table='bq_job_log') %}
 
-    INSERT INTO `xebia-case-max.{{ dataset }}.{{ table }}`
+    INSERT INTO `max-poirault-sndbx-q.{{ dataset }}.{{ table }}`
     WITH jobs AS (
         SELECT *
         FROM   `region-{{ region }}`.INFORMATION_SCHEMA.JOBS
