@@ -1,0 +1,27 @@
+version: 2
+
+sources:
+  - name: raw                    
+    schema: raw                  
+
+    tables:
+      - name: sales             
+        description: "Sales data with order and stock dates, item lines, and keys."
+
+        columns:
+          - name: OrderDate
+            description: "Order date (DATE)."
+          - name: StockDate
+            description: "Stock date (DATE)."
+          - name: OrderNumber
+            description: "Order identifier (STRING)."
+          - name: ProductKey
+            description: "Product surrogate key (INTEGER)."
+          - name: CustomerKey
+            description: "Customer surrogate key (INTEGER)."
+          - name: TerritoryKey
+            description: "Sales territory key (INTEGER)."
+          - name: OrderLineItem
+            description: "Line number within an order (INTEGER)."
+          - name: OrderQuantity
+            description: "Quantity ordered (INTEGER)."

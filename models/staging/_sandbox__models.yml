@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: stg_sales
+    description: "Staging model for sales data. This model cleans and renames columns from the raw sales source."
+    config:
+      persist_docs:
+        relation: true
+        columns: true
+    columns:
+      - name: product_id
+        description: "The unique identifier for a product."
+      - name: product_name
+        description: "The name of the product."
+      - name: product_category
+        description: "The category of the product."
+      - name: product_price
+        description: "The price of the product."
