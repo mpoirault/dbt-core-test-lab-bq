@@ -1,0 +1,10 @@
+[project]
+name = "ae-certification"
+version = "0.1.0"
+description = "DBT Test Project"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dbt-core>=1.10",
+    "dbt-bigquery>=1.9"
+]
