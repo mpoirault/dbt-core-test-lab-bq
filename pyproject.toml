@@ -1,5 +1,5 @@
 [project]
-name = "ae-certification"
+name = "dbt-core-test"
 version = "0.1.0"
 description = "DBT Test Project"
 readme = "README.md"

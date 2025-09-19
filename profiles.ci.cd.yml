@@ -1,4 +1,4 @@
-ae_certificate:
+dbt-core-test:
   target: ci
   outputs:
     ci:
