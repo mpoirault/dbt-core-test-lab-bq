@@ -1,4 +1,4 @@
-{% macro log_bq_jobs(region='EU', dataset='dbt_audit', table='bq_job_log') %}
+{% macro log_bq_jobs(region="EU", dataset="dbt_audit", table="bq_job_log") %}
 
     INSERT INTO `max-poirault-sndbx-q.{{ dataset }}.{{ table }}`
     WITH jobs AS (
