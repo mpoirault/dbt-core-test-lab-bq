@@ -53,7 +53,7 @@ jobs:
         run: |
           image="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${AR_REPOSITORY}/dbt"
           docker build \
-            --build-arg "PYTHON_VERSION=$(cat .python-version)" \
+            --build-arg "GCP_PROJECT=${GCP_PROJECT}" \
             --tag "${image}:${GITHUB_SHA}" \
             --tag "${image}:latest" \
             .
