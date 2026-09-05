@@ -37,7 +37,10 @@ USER dbt
 WORKDIR /app/dbt
 
 # packages and a parsed manifest at build time, so a broken project fails the
-# image build, not the prod run. parse needs no warehouse.
-RUN dbt deps && dbt parse --target prod
+# image build, not the prod run. parse needs no warehouse, but the prod
+# target reads GCP_PROJECT at parse time, so it gets a placeholder here.
+# the Cloud Run job sets the real value at runtime.
+RUN GCP_PROJECT=parse-only dbt deps \
+    && GCP_PROJECT=parse-only dbt parse --target prod
 
 # no CMD: the Cloud Run job carries the command (infrastructure/cloud_run.tf)
