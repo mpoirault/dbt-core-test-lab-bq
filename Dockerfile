@@ -1,43 +1,44 @@
-# image for the Cloud Run job. dbt-bigquery from uv.lock, the dbt project
-# under /app/dbt, packages and manifest built in. no credentials in here:
-# the job runs as the dbt-core-runner service account and dbt-bigquery
-# picks that up through application default credentials (method: oauth).
-ARG PYTHON_VERSION=3.12
+# image for the Cloud Run job. python version from .python-version, dbt from
+# uv.lock, the dbt project parsed at build time. no credentials in here: the
+# job runs as the dbt-core-runner service account and dbt-bigquery picks it
+# up through application default credentials (method: oauth).
+FROM python:3.12-slim
 
-FROM python:${PYTHON_VERSION}-slim AS builder
-
-COPY --from=ghcr.io/astral-sh/uv:0.11.28 /uv /usr/local/bin/uv
-
-ENV UV_COMPILE_BYTECODE=1 \
-    UV_LINK_MODE=copy \
-    UV_PYTHON_DOWNLOADS=never
-
-WORKDIR /app
-COPY pyproject.toml uv.lock ./
-# runtime deps only, the dev group (linters, bouncer) stays out of the image
-RUN uv sync --frozen --no-dev --no-install-project
-
-FROM python:${PYTHON_VERSION}-slim AS runtime
+# build arguments for project configuration, cd_dbt passes them
+ARG GCP_PROJECT
 
 ENV PYTHONUNBUFFERED=1 \
+    PATH="/usr/app/.venv/bin:/root/.local/bin/:$PATH" \
+    # prevents python creating .pyc files
     PYTHONDONTWRITEBYTECODE=1 \
-    PATH="/app/.venv/bin:$PATH" \
-    DBT_PROFILES_DIR=/app/dbt
+    DBT_PROFILES_DIR="." \
+    DBT_PROJECT_DIR="." \
+    # the prod profile target reads this at parse time and at runtime
+    GCP_PROJECT=${GCP_PROJECT}
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends git \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /usr/app/
+VOLUME /usr/app
 
-# non-root, Cloud Run does not need root and checkov asks for it
-RUN useradd --create-home --uid 1000 dbt
-WORKDIR /app
-COPY --from=builder --chown=dbt:dbt /app/.venv /app/.venv
-COPY --chown=dbt:dbt dbt/ /app/dbt/
-USER dbt
-WORKDIR /app/dbt
+# install OS dependencies, add git if you start downloading dbt packages from git
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install ca-certificates curl -y && \
+    rm -rf /var/lib/apt/lists/*
 
-# packages and a parsed manifest at build time, so a broken project fails the
-# image build, not the prod run. parse needs no warehouse.
-RUN dbt deps && dbt parse --target prod
+# install uv
+ADD https://astral.sh/uv/install.sh /uv-installer.sh
+RUN sh /uv-installer.sh && rm /uv-installer.sh
+
+# install python dependencies, dev tools stay out of the image
+COPY pyproject.toml uv.lock .python-version ./
+RUN uv sync --no-dev --frozen
+
+COPY . .
+
+# the dbt project lives in dbt/, the job runs its commands from here
+WORKDIR /usr/app/dbt/
+
+RUN uv run dbt deps && \
+    uv run dbt parse --target prod
 
 # no CMD: the Cloud Run job carries the command (infrastructure/cloud_run.tf)
