@@ -1,0 +1,72 @@
+---
+# CD: on every merge to main that touches the dbt project or its image, build
+# the image, push it to Artifact Registry, roll the Cloud Run job to it and
+# execute the job (seed, then build). the same as the cloud labs merge job.
+#
+# also the manual prod run: workflow_dispatch on the actions tab. on a public
+# repo only accounts with write access can dispatch, and the deploy key lives
+# in the `prod` environment, which is limited to main and needs a reviewer
+# approval before the job gets the secret.
+name: cd_dbt
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - dbt/**
+      - Dockerfile
+      - .dockerignore
+      - pyproject.toml
+      - uv.lock
+      - .github/workflows/cd_dbt.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# one deploy at a time, a second merge waits for the first
+concurrency:
+  group: cd-dbt
+  cancel-in-progress: false
+
+env:
+  GCP_PROJECT: ${{ vars.GCP_PROJECT }}
+  GCP_REGION: ${{ vars.GCP_REGION }}
+  AR_REPOSITORY: ${{ vars.AR_REPOSITORY }}
+  CLOUD_RUN_JOB: ${{ vars.CLOUD_RUN_JOB }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prod
+    steps:
+      - name: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: authenticate to gcp (dbt-core-deploy SA)
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3.0.0
+        with:
+          credentials_json: ${{ secrets.GCP_DEPLOY_SA_KEY }}
+      - name: docker login to artifact registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+      - name: build and push the image (<sha> and latest)
+        run: |
+          image="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${AR_REPOSITORY}/dbt"
+          docker build \
+            --build-arg "PYTHON_VERSION=$(cat .python-version)" \
+            --tag "${image}:${GITHUB_SHA}" \
+            --tag "${image}:latest" \
+            .
+          docker push "${image}:${GITHUB_SHA}"
+          docker push "${image}:latest"
+      # terraform ignores the image on the job, so this never shows as drift
+      - name: roll the cloud run job to the new image
+        run: |
+          gcloud run jobs update "${CLOUD_RUN_JOB}" \
+            --region "${GCP_REGION}" \
+            --image "${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT}/${AR_REPOSITORY}/dbt:${GITHUB_SHA}" \
+            --quiet
+      # --wait: the step fails when the job fails, a red run on main means
+      # prod did not build
+      - name: execute the prod build
+        run: gcloud run jobs execute "${CLOUD_RUN_JOB}" --region "${GCP_REGION}" --wait

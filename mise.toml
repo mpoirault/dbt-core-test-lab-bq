@@ -1,0 +1,13 @@
+# Pinned binary toolchain: one `mise trust && mise run setup` provisions everything.
+# Python and the python tools are NOT here. uv installs the interpreter from
+# .python-version and the packages from uv.lock, dbt included.
+[tools]
+uv = "0.11.28"
+terraform = "1.15.8"
+
+[tasks.setup]
+description = "One-shot dev setup: python env (dbt included) and git hooks"
+run = [
+  "uv sync",
+  "uv run pre-commit install",
+]

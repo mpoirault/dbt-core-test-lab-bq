@@ -1,0 +1,15 @@
+---
+directory:
+  - .
+framework:
+  - terraform
+  - github_actions
+skip-path:
+  - .terraform/
+  - planning/
+  # third party dbt packages ship their own workflows, not ours to fix
+  - dbt/dbt_packages/
+  - dbt/target/
+soft-fail: false
+compact: true
+quiet: true

@@ -1,0 +1,20 @@
+# Copy to vars.tfvars in this folder (gitignored) and fill in real values.
+# Use it with: terraform plan -var-file=env/lab/vars.tfvars (from infrastructure/)
+#
+# Nothing in here is secret, the file is gitignored by the `*.tfvars` rule
+# anyway. GCP auth is via Application Default Credentials
+# (gcloud auth application-default login), not this file.
+
+# --- GCP ---
+gcp_project = "<your-gcp-project-id>"
+gcp_region  = "europe-west4"
+# The state bucket you created by hand (see README setup). Must be the same
+# bucket as in backend-config.tfvars, backend blocks cannot read variables.
+state_bucket = "<your-tfstate-bucket>"
+
+# --- GitHub ---
+gh_repo_name = "dbt-core-test-lab-bq" # used as the repo label on datasets
+
+# --- optional, defaults in variables.tf ---
+# ar_repository      = "dbt-core-test-lab-bq"
+# cloud_run_job_name = "dbt-core-prod-build"

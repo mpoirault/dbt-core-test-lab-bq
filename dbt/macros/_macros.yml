@@ -1,0 +1,23 @@
+---
+macros:
+  - name: generate_schema_name
+    description: >
+      Schema routing (logic in generate_schema_name.sql). The prod dataset for
+      a stage is always core_<stage>; dev datasets are the same name prefixed
+      with your personal dataset: <target.schema>_core_<stage>, e.g.
+      dbt_mpoirault_core_marts. Exception: raw is shared, seeds and snapshots
+      build into core_raw in every target. Second exception: the ci target
+      builds everything (snapshots included, CI never writes shared raw) into
+      target.schema unchanged, i.e. the dbt_core_pr_<number> dataset that
+      ci_dbt creates for the run and drops at the end, so nothing lingers.
+      target.schema is the dataset of your profile target (convention
+      dbt_<yourname>, the dev default in profiles.yml).
+    arguments:
+      - name: custom_schema_name
+        type: string
+        description: >
+          The per-folder +schema value set in dbt_project.yml
+          (raw, staging, intermediate, marts).
+      - name: node
+        type: node
+        description: The node dbt is generating the schema for.

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout -b*)",
+      "Bash(git switch -c*)"
+    ]
+  },
+  "enabledPlugins": {
+    "test-lab-learning@mpoirault": true
+  },
+  "extraKnownMarketplaces": {
+    "mpoirault": {
+      "source": {
+        "source": "github",
+        "repo": "mpoirault/development-learning-workflow"
+      }
+    }
+  }
+}

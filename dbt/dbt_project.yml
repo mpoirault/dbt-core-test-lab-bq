@@ -1,0 +1,70 @@
+---
+name: dbt_core_test_lab_bq
+version: 1.0.0
+config-version: 2
+
+# profile name in profiles.yml (committed next to this file, three oauth targets)
+profile: dbt_core_test_lab_bq
+
+model-paths:
+  - "models"
+analysis-paths:
+  - "analyses"
+test-paths:
+  - "tests"
+seed-paths:
+  - "seeds"
+macro-paths:
+  - "macros"
+snapshot-paths:
+  - "snapshots"
+target-path: "target"  # directory which will store compiled SQL files
+clean-targets:  # directories to be removed by `dbt clean`
+  - "target"
+  - "dbt_packages"
+
+# the +schema values below are stage names, not dataset names. the dataset
+# for a stage is core_<stage> in prod and <your dataset>_core_<stage> in dev,
+# see macros/generate_schema_name.sql
+models:
+  dbt_core_test_lab_bq:
+    +materialized: view
+
+    staging:
+      +schema: staging
+      +group: core
+
+    # intermediate subfolders are organized by business group
+    intermediate:
+      +schema: intermediate
+      finance:
+        +group: finance
+
+    # marts subfolders are organized by business group; utilities is owned by core
+    marts:
+      +schema: marts
+      +materialized: table
+      core:
+        +group: core
+      finance:
+        +group: finance
+      marketing:
+        +group: marketing
+      utilities:
+        +group: core
+
+vars:
+  # dbt_date defaults to America/Los_Angeles; all our timestamps are UTC
+  "dbt_date:time_zone": UTC
+
+seeds:
+  dbt_core_test_lab_bq:
+    +schema: seeds
+    sources:
+      +schema: raw
+      raw_orders:
+        +column_types:
+          _ETL_LOADED_AT: timestamp
+      raw_payments:
+        +column_types:
+          _BATCHED_AT: timestamp

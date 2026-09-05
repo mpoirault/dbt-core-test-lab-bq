@@ -1,0 +1,45 @@
+---
+# committed on purpose: no secrets in here. every target uses oauth, which is
+# application default credentials: your `gcloud auth application-default
+# login` on a laptop, the attached dbt-core-runner SA on the Cloud Run job,
+# the activated dbt-core-ci key in GitHub Actions. no key file is ever
+# referenced from this file.
+#
+# target names are load bearing: macros/generate_schema_name.sql keys on
+# "prod" and "ci". the Cloud Run job runs --target prod, ci_dbt runs
+# --target ci, and dev is the default for a laptop.
+dbt_core_test_lab_bq:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT', 'max-poirault-sndbx-q') }}"
+      # your personal dataset, models build to <dataset>_core_<stage>
+      dataset: "{{ env_var('DBT_DATASET', 'dbt_' ~ env_var('USER', 'dev')) }}"
+      location: europe-west4
+      threads: 4
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+
+    ci:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT') }}"
+      # dbt_core_pr_<number>, set by ci_dbt and dropped at the end of the run
+      dataset: "{{ env_var('DBT_DATASET') }}"
+      location: europe-west4
+      threads: 4
+      job_execution_timeout_seconds: 300
+      job_retries: 1
+
+    prod:
+      type: bigquery
+      method: oauth
+      project: "{{ env_var('GCP_PROJECT') }}"
+      # fallback only, every node routes to core_<stage> through the macro
+      dataset: core
+      location: europe-west4
+      threads: 4
+      job_execution_timeout_seconds: 300
+      job_retries: 1
