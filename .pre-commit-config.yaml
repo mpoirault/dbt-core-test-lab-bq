@@ -1,7 +1,6 @@
 ---
-# Tool provisioning: binaries come from mise.toml, Python tools from pyproject.toml
-# (uv-managed). Local hooks run `uv run <tool>` so hooks, editor, and CI all use
-# the exact versions resolved in uv.lock.
+# Binaries come from mise.toml, python tools from uv.lock.
+# Local hooks call `uv run <tool>`, so hooks, editor and CI use the same versions.
 repos:
   # ── Generic hooks (repo-wide) ───────────────────────────────────────────────
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -55,8 +54,7 @@ repos:
         require_serial: true
       - id: rumdl
         name: rumdl
-        # `fmt` (formatter semantics) rather than `check`: fixes what it can
-        # without failing on unfixable lint rules (e.g. inline HTML).
+        # `fmt` fixes what it can and does not fail on unfixable rules.
         entry: uv run rumdl fmt
         language: system
         types:
@@ -75,8 +73,7 @@ repos:
         require_serial: true
       - id: dbt-bouncer
         name: dbt-bouncer
-        # checks dbt/target/manifest.json against dbt-bouncer.yml (modeling
-        # standards); run `dbt parse` if the manifest is stale
+        # Reads dbt/target/manifest.json. If the manifest is stale, run `dbt parse` first.
         entry: uv run dbt-bouncer
         language: system
         always_run: true

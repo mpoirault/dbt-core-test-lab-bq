@@ -1,6 +1,6 @@
 resource "google_bigquery_dataset" "this" {
-  # checkov:skip=CKV_GCP_81: CMEK is overkill for a personal lab, google managed
-  # encryption is fine. revisit before putting real data in here.
+  # checkov:skip=CKV_GCP_81: google managed encryption is enough for a lab.
+  # Revisit before real data lands here.
 
   dataset_id  = var.dataset_id
   description = var.description

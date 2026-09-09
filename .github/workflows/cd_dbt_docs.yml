@@ -1,8 +1,5 @@
 ---
-# dbt docs to GitHub Pages. runs after a successful cd_dbt, so the catalog
-# matches the tables that exist in prod. the CI service account has read on
-# core_*, thats all docs generate needs. no gh-pages branch: the site is
-# uploaded as an artifact and deployed from it.
+# dbt docs to GitHub Pages, after a green cd_dbt so the catalog matches prod.
 name: cd_dbt_docs
 
 on:

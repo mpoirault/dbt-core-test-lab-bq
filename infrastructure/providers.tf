@@ -8,12 +8,8 @@ terraform {
     }
   }
 
-  # empty on purpose. the actual bucket/prefix come from
-  # env/lab/backend-config.tfvars at init time:
-  #   terraform init -backend-config=env/lab/backend-config.tfvars
-  # with more envs each one gets its own backend-config plus a terraform
-  # workspace. the state bucket itself is made by hand (chicken and egg,
-  # you need state to manage the bucket that holds the state).
+  # Empty on purpose. Bucket and prefix come from env/<env>/backend-config.tfvars at init.
+  # The bucket itself is made by hand, terraform cannot manage its own backend.
   backend "gcs" {
   }
 }

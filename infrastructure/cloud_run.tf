@@ -1,8 +1,6 @@
-# the dbt image lives here. cd_dbt pushes <sha> and latest on every merge to
-# main. the cleanup policy keeps the registry from growing forever.
+# cd_dbt pushes <sha> and latest on every merge to main.
 resource "google_artifact_registry_repository" "dbt" {
-  # checkov:skip=CKV_GCP_84: CMEK is overkill for a personal lab, google managed
-  # encryption is fine. same call as on the datasets.
+  # checkov:skip=CKV_GCP_84: google managed encryption is enough for a lab.
   project       = var.gcp_project
   location      = var.gcp_region
   repository_id = var.ar_repository
@@ -28,11 +26,10 @@ resource "google_artifact_registry_repository" "dbt" {
   depends_on = [google_project_service.this]
 }
 
-# the prod build. same two steps as the cloud labs merge job: seed, then
-# build everything but seeds. runs as the runner SA, dbt-bigquery picks it
-# up as application default credentials. cd_dbt updates the image tag on
-# every merge and then executes the job, so the image is ignored here:
-# otherwise every deploy would show up as drift and fail ci_terraform.
+# The prod build. dbt-bigquery authenticates as the runner SA
+# through application default credentials.
+# cd_dbt sets the image tag on every merge, so terraform ignores it.
+# Without that, each deploy is drift and ci_terraform fails.
 resource "google_cloud_run_v2_job" "dbt" {
   name                = var.cloud_run_job_name
   location            = var.gcp_region
@@ -46,13 +43,11 @@ resource "google_cloud_run_v2_job" "dbt" {
       max_retries     = 0
 
       containers {
-        # bootstrap image only, googles public hello-job. the first cd_dbt
-        # run swaps it for the real one and terraform ignores the image from
-        # then on (see lifecycle). cloud run refuses a job whose image does
-        # not exist yet, this way the first apply is one pass.
+        # Bootstrap image, Cloud Run refuses a job whose image does not exist yet.
+        # The first cd_dbt run replaces it.
         image   = "us-docker.pkg.dev/cloudrun/container/job:latest"
         command = ["bash", "-c"]
-        args    = ["dbt seed --target prod && dbt build --target prod --exclude resource_type:seed"]
+        args    = ["dbt build --target prod"]
 
         env {
           name  = "GCP_PROJECT"

@@ -7,7 +7,7 @@ framework:
 skip-path:
   - .terraform/
   - planning/
-  # third party dbt packages ship their own workflows, not ours to fix
+  # Third party dbt packages ship their own workflows.
   - dbt/dbt_packages/
   - dbt/target/
 soft-fail: false

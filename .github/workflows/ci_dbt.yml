@@ -1,8 +1,5 @@
 ---
-# dbt side of PR CI: the linting suite, dbt-bouncer, then a real build of the
-# whole project into a throwaway dataset that the run drops again at the end.
-# only fires when something in dbt/ (or its toolchain) changes. terraform has
-# its own workflow, ci_terraform.
+# dbt side of PR CI: lint, dbt-bouncer, then a full build into a throwaway dataset.
 name: ci_dbt
 
 on:
@@ -17,19 +14,18 @@ on:
       - .github/workflows/ci_dbt.yml
   workflow_dispatch:
 
-# default deny
 permissions:
   contents: read
 
-# a new push cancels the previous run for that PR
+# A new push cancels the previous run for that PR.
 concurrency:
   group: ci-dbt-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 env:
   GCP_PROJECT: ${{ vars.GCP_PROJECT }}
-  # one dataset per PR, built and dropped in this run. the ci target puts
-  # every node in here, see dbt/macros/generate_schema_name.sql
+  # One dataset per PR. The ci target puts every node in here,
+  # see dbt/macros/generate_schema_name.sql.
   DBT_DATASET: dbt_core_pr_${{ github.event.pull_request.number || github.run_id }}
 
 jobs:
@@ -50,12 +46,10 @@ jobs:
       - name: dbt deps
         working-directory: dbt
         run: uv run dbt deps
-      # same checks as a local commit, same pinned toolchain (mise.toml +
-      # uv.lock). terraform hooks are skipped, those run in ci_terraform.
-      # dbt-bouncer runs as its own step below, it needs a manifest first.
+      # Same hooks as a local commit. Terraform hooks run in ci_terraform,
+      # dbt-bouncer runs as its own step because it needs a manifest first.
       - name: lint (pre-commit)
         run: SKIP=dbt-bouncer,terraform-fmt,terraform-validate,checkov uv run pre-commit run --all-files --show-diff-on-failure
-      # parse needs no warehouse and writes dbt/target/manifest.json
       - name: dbt parse (build the manifest)
         working-directory: dbt
         run: uv run dbt parse --target ci
@@ -65,28 +59,25 @@ jobs:
           config-file: ./dbt-bouncer.yml
           only: manifest_checks
           send-pr-comment: ${{ github.event_name == 'pull_request' }}
-      # everything below needs the CI service account key. a PR from a fork
-      # never gets repository secrets, so the build is skipped there and the
-      # PR still gets lint and bouncer. pull_request_target is never used.
+      # A PR from a fork never gets repository secrets,
+      # so the build is skipped there and the PR still gets lint and bouncer.
       - name: authenticate to gcp (dbt-core-ci SA)
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093  # v3.0.0
         with:
           credentials_json: ${{ secrets.GCP_DBT_CI_SA_KEY }}
-      # full build, seeds excluded: staging reads the shared core_raw through
-      # source(), same as prod. the snapshot lands in the PR dataset (ci
-      # branch of the schema macro), so shared raw is never written from CI.
+      # Seeds excluded: staging reads the shared core_raw through source(), same as prod.
+      # The snapshot lands in the PR dataset, CI never writes to shared raw.
       #
-      # in a production setup this would be slim CI:
+      # Slim CI would be:
       #   dbt build --target ci -s state:modified+ --defer --favor-state --state <prod manifest>
-      # with the prod manifest uploaded by cd_dbt to a bucket after each
-      # deploy. a manifest store, its IAM and a download step are more infra
-      # than a lab needs, and this project builds in under a minute anyway.
+      # That needs a manifest store with IAM and a download step.
+      # More infra than a lab needs, this project builds in under a minute.
       - name: dbt build (full, into the PR dataset)
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         working-directory: dbt
         run: uv run dbt build --target ci --exclude resource_type:seed
-      # always, so a failed build does not leave the dataset behind
+      # always(), so a failed build does not leave the dataset behind.
       - name: drop the PR dataset
         if: always() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         run: bq rm --recursive --force --dataset "${GCP_PROJECT}:${DBT_DATASET}"

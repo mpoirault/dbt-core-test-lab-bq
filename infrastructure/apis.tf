@@ -1,6 +1,4 @@
-# apis the stack needs. disable_on_destroy = false: a destroy should take the
-# resources, not switch off apis that other things in the project (the cloud
-# lab shares it) may rely on.
+# disable_on_destroy = false: other stacks in this project share these apis.
 locals {
   apis = [
     "artifactregistry.googleapis.com",
