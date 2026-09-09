@@ -1,10 +1,9 @@
-# four identities, each scoped to what its one job needs. no
-# google_service_account_key resources anywhere: the runner needs no key (it
-# is attached to the Cloud Run job), the other three get a key minted by hand
-# with gcloud and pasted into a github secret, so no private key ever sits in
-# terraform state.
+# Four identities, one job each. No google_service_account_key resources:
+# the runner is attached to the Cloud Run job and needs no key.
+# The other three get a key minted with gcloud and pasted into a GitHub secret,
+# so no private key ever sits in terraform state.
 
-# --- prod runner, attached to the Cloud Run job ---
+# --- prod runner ---
 resource "google_service_account" "dbt_core_runner" {
   account_id   = "dbt-core-runner"
   display_name = "dbt Core runner"
@@ -18,8 +17,7 @@ resource "google_project_iam_member" "dbt_core_runner_jobs" {
   member  = "serviceAccount:${google_service_account.dbt_core_runner.email}"
 }
 
-# dataset level, not project level: the runner can only touch the five
-# datasets terraform made for it
+# Dataset level on purpose, the runner touches only the datasets terraform made for it.
 resource "google_bigquery_dataset_iam_member" "dbt_core_runner" {
   for_each   = module.bq_datasets
   project    = var.gcp_project
@@ -28,11 +26,10 @@ resource "google_bigquery_dataset_iam_member" "dbt_core_runner" {
   member     = "serviceAccount:${google_service_account.dbt_core_runner.email}"
 }
 
-# --- PR CI identity ---
-# bigquery.user: run jobs and create datasets, owning the ones it creates.
-# thats how it makes and drops dbt_core_pr_<number>. read on core_* so
-# staging can select from the shared core_raw and docs generate can read the
-# prod catalog. it cannot write to any core_* dataset.
+# --- PR CI ---
+# bigquery.user lets it create the dbt_core_pr_<number> dataset and own it,
+# which is how the workflow drops the dataset again.
+# Read on core_*: staging selects from the shared core_raw and docs generate reads prod.
 resource "google_service_account" "dbt_core_ci" {
   account_id   = "dbt-core-ci"
   display_name = "dbt Core CI"
@@ -54,10 +51,9 @@ resource "google_bigquery_dataset_iam_member" "dbt_core_ci" {
   member     = "serviceAccount:${google_service_account.dbt_core_ci.email}"
 }
 
-# --- deploy identity for cd_dbt ---
-# pushes the image, updates the job to it, executes the job. run.developer
-# covers update and run on jobs, serviceAccountUser on the runner is what
-# lets it (re)deploy a job that runs as the runner.
+# --- deploy, cd_dbt ---
+# run.developer covers update and execute on the job.
+# serviceAccountUser on the runner is what lets it deploy a job that runs as the runner.
 resource "google_service_account" "dbt_core_deploy" {
   account_id   = "dbt-core-deploy"
   display_name = "dbt Core deploy"
@@ -85,11 +81,9 @@ resource "google_service_account_iam_member" "dbt_core_deploy_act_as_runner" {
   member             = "serviceAccount:${google_service_account.dbt_core_deploy.email}"
 }
 
-# --- plan-only identity for PR CI ---
-# -core suffix because the cloud lab already owns terraform-plan-ci in this
-# project. granular read roles instead of roles/viewer (checkov CKV_GCP_117),
-# covering what plan refreshes: datasets and their IAM, service accounts and
-# their IAM, the registry, the job, enabled apis.
+# --- plan only, ci_terraform ---
+# The -core suffix: another lab in this project already owns terraform-plan-ci.
+# Granular read roles instead of roles/viewer, checkov CKV_GCP_117.
 resource "google_service_account" "terraform_plan_ci" {
   account_id   = "terraform-plan-ci-core"
   display_name = "Terraform plan (PR CI, core lab)"
@@ -115,10 +109,9 @@ resource "google_project_iam_member" "terraform_plan_ci" {
   member   = "serviceAccount:${google_service_account.terraform_plan_ci.email}"
 }
 
-# the gcs backend writes a lock object even for plan, so this SA needs write
-# on the state bucket. just that one bucket, not the project. the backend
-# block itself cant read variables, so var.state_bucket has to match the
-# bucket in env/<env>/backend-config.tfvars by hand.
+# The gcs backend writes a lock object even for plan, so plan needs write on the bucket.
+# var.state_bucket must match env/<env>/backend-config.tfvars by hand,
+# the backend block cannot read variables.
 resource "google_storage_bucket_iam_member" "terraform_plan_ci_state" {
   bucket = var.state_bucket
   role   = "roles/storage.objectAdmin"

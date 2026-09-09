@@ -1,4 +1,4 @@
-# only pyproject.toml, uv.lock, .python-version and dbt/ reach the image
+# Only pyproject.toml, uv.lock, .python-version and dbt/ reach the image.
 .git
 .github
 .claude

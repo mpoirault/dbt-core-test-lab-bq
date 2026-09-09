@@ -1,6 +1,5 @@
-{#- payment methods are hardcoded (not dbt_utils.get_column_values) because this
-    model has a unit test: unit tests mock refs as fixture CTEs and never query
-    the warehouse, so introspective macros fail at unit-test compile time -#}
+{#- Hardcoded, not dbt_utils.get_column_values: this model has a unit test,
+    and unit tests never query the warehouse. -#}
 {%- set payment_methods = ["bank_transfer", "coupon", "credit_card", "gift_card"] -%}
 
 with

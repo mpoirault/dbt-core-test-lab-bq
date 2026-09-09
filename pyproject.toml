@@ -1,7 +1,4 @@
-# Not a Python package. This file declares the dbt runtime (dbt-bigquery, which
-# pulls dbt-core) and the uv-managed dev toolchain, exact versions in uv.lock.
-# Binaries (terraform, uv itself) are pinned in mise.toml. Python is managed by
-# uv from .python-version, not by mise.
+# Binaries (terraform, uv) are pinned in mise.toml. uv manages python from .python-version.
 
 [project]
 name = "dbt-core-test-lab-bq"
@@ -18,7 +15,7 @@ package = false
 dev = [
   "dbt-bouncer>=3.7",
   "pre-commit>=4.6,<5",
-  "pygments>=2.21,<3",
+  "pygments>=2.21,<3", # syntax highlighting in explore pages
   "ruff>=0.15.21,<1",
   "rumdl>=0.2.30",
   "shandy-sqlfmt[jinjafmt]>=0.30,<1",
@@ -26,12 +23,11 @@ dev = [
 ]
 
 [tool.rumdl]
-# Disable line-length (MD013): dbt docs and tables routinely exceed it.
+# MD013 off, dbt docs and tables exceed any line length.
 disable = ["MD013"]
 
 [tool.yamlfix]
-# Gentle formatting: keep existing quotes, use block-style sequences, and preserve
-# one blank line between sections (yamlfix's default whitelines = 0 strips them).
+# whitelines = 1 keeps one blank line between sections, the default strips them.
 line_length = 120
 preserve_quotes = true
 sequence_style = "block_style"

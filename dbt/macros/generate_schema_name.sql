@@ -1,22 +1,15 @@
 {#
-  schema routing per target. custom_schema_name is the +schema value from
-  dbt_project.yml (raw / staging / intermediate / marts), the prod dataset
-  for a stage is always core_<stage>.
+  Schema routing per target. custom_schema_name is the +schema value from dbt_project.yml.
 
-  - prod: core_<stage>                        e.g. core_marts
-  - ci:   everything goes into target.schema as is. on a PR that is the
-    dbt_core_pr_<number> dataset ci_dbt creates for the run, and keeping all
-    models in that one dataset is what lets the workflow drop it in one
-    command at the end (suffixed datasets would just linger).
-  - dev (anything else): <target.schema>_core_<stage>, e.g. dbt_mpoirault_core_marts
-  - raw is shared: seeds and snapshots build into core_raw in every target
-    and all targets read sources from there. exception is ci, its snapshots
-    stay in the PR dataset too, ci must never write to shared raw.
-  - no +schema set: falls back to target.schema.
+  - prod: core_<stage>.
+  - ci: everything goes into target.schema, the dbt_core_pr_<number> dataset of the run.
+    One dataset is what lets ci_dbt drop it in one command at the end.
+  - dev, anything else: <target.schema>_core_<stage>.
+  - raw is shared. Seeds and snapshots build into core_raw in every target
+    and all targets read sources from there.
+    Exception: ci keeps its snapshots in the PR dataset, ci must never write to shared raw.
 
-  target.schema is the dataset of your profile target, for dev thats
-  DBT_DATASET or dbt_<user> (see profiles.yml). the Cloud Run job has to use
-  target name "prod" and ci_dbt "ci", this macro keys on those.
+  The Cloud Run job must use target name "prod" and ci_dbt "ci", this macro keys on those.
 #}
 {% macro generate_schema_name(custom_schema_name, node) -%}
 

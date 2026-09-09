@@ -1,13 +1,13 @@
 # Terraform
 .terraform/
-# the validate hook runs per directory and drops lockfiles inside modules,
-# only the root lockfile is the real one
+# The validate hook runs per directory and drops lockfiles inside modules.
+# Only the root lockfile is real.
 infrastructure/modules/**/.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 *.tfvars
 *.tfvars.json
-# backend config is not a secret (just the state bucket name), keep it tracked
+# Backend config holds only the state bucket name, keep it tracked.
 !infrastructure/env/*/backend-config.tfvars
 crash.log
 crash.*.log
@@ -16,7 +16,7 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
-# dbt. profiles.yml IS committed: three oauth targets, no secrets in it
+# dbt. profiles.yml is committed, its three oauth targets hold no secrets.
 target/
 dbt_packages/
 logs/
@@ -29,26 +29,25 @@ __pycache__/
 venv/
 .env
 
-# Tool caches (created locally by pre-commit hooks)
+# Tool caches from the pre-commit hooks
 .ruff_cache/
 .rumdl_cache/
 
-# mise per-developer overrides (mise.toml IS committed)
+# mise per-developer overrides, mise.toml is committed
 mise.local.toml
 
-# Claude Code repo config IS committed (plugin, settings).
-# A user-level git ignore may exclude .claude/; un-ignore it here.
+# .claude/ is committed. A user-level git ignore can exclude it, so un-ignore it here.
 !.claude/
 !.claude/**
 .claude/settings.local.json
 
-# Editor / OS — .vscode/settings.json IS committed (shared editor config)
+# Editor and OS. .vscode/settings.json is committed.
 .DS_Store
 .idea/
 .vscode/*
 !.vscode/settings.json
 
-# Secrets (be explicit; do not blanket-ignore *.json)
+# Secrets. Explicit names, *.json stays unignored.
 gcp-sa-*.json
 credentials.json
 service-account*.json

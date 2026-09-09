@@ -1,10 +1,8 @@
 ---
-# terraform PR CI: fmt + validate + checkov, then a real plan against the gcs
-# state. the plan body is never printed or posted, on a public repo the
-# actions log would expose it. instead the job fails when the plan is not
-# empty (-detailed-exitcode). read only identity, apply stays local and
-# manual, so green means the branch matches the deployed state. can also be
-# run by hand from the actions tab. only fires when terraform changes.
+# Terraform side of PR CI: fmt, validate, checkov, then a plan against the gcs state.
+# The plan body is never printed, the actions log of a public repo would expose it.
+# The job fails when the plan is not empty. Apply stays local and manual,
+# so green means the branch matches the deployed state.
 name: ci_terraform
 
 on:
@@ -20,7 +18,7 @@ on:
 permissions:
   contents: read
 
-# a new push cancels the previous run for that PR
+# A new push cancels the previous run for that PR.
 concurrency:
   group: ci-terraform-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
@@ -48,9 +46,7 @@ jobs:
           credentials_json: ${{ secrets.GCP_CI_SA_KEY }}
       - name: terraform init
         working-directory: infrastructure
-        # backend config lives per env, see infrastructure/env/
         run: terraform init -input=false -backend-config=env/lab/backend-config.tfvars
-      # same hooks as a local commit, just the terraform ones
       - name: terraform lint (fmt, validate, checkov)
         run: |
           uv run pre-commit run terraform-fmt --all-files
@@ -58,12 +54,9 @@ jobs:
           uv run pre-commit run checkov --all-files
       - name: terraform plan (fail when not empty, output hidden)
         working-directory: infrastructure
-        # -lock=false: plan is read only and shouldnt fight a local apply
-        # for the state lock
-        # -detailed-exitcode: 0 = empty plan, 1 = error, 2 = pending changes.
-        # stdout goes to /dev/null so the log never shows the plan body,
-        # stderr stays visible for real errors. run the plan locally to see
-        # the diff.
+        # -lock=false: a read only plan must not fight a local apply for the state lock.
+        # -detailed-exitcode: 0 empty, 1 error, 2 pending changes.
+        # stdout goes to /dev/null, stderr stays visible. Run the plan locally to see the diff.
         run: |-
           set +e
           terraform plan -input=false -lock=false -detailed-exitcode > /dev/null
